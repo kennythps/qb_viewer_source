@@ -1,0 +1,139 @@
+#include "main.h"
+
+int Decompile(char *filename)
+{
+	bool newline = true;
+
+	FILE *file = fopen(filename, "rb");
+	if(!file) {
+		printf("Couldn't open file!");
+		goto eerr;
+	}
+
+	fread(head, 1, 3, file);
+	if(memcmp(head, file_header, 3)) {
+		printf("Not a valid qb-file!");
+		goto eerr;
+	}
+
+	fseek(file, 0, SEEK_END);
+	size = ftell(file) - 3;
+	fseek(file, 3, SEEK_SET);
+	qb = (unsigned char*)malloc(size);
+	if(!qb) goto eerr;
+	fread(qb, 1, size, file);
+	fclose(file);
+	file = NULL;
+    
+	while(pos < size && !found) {
+		if(!memcmp(&qb[pos], dt_start, 4)) {
+			found = true;
+			dstart = pos-1;
+		}
+		pos++;
+	}
+
+	pos = dstart;
+	dt_table.clear();
+	dt_id.clear();
+	while(pos < size) {
+		if(qb[pos] == '+') {
+			pos++;
+			dt_id.push_back(*((unsigned int*)(&qb[pos]))); pos += 4;
+			dt_table.push_back(&qb[pos]);
+			while(qb[pos]) pos++;	// skip string
+			pos++;
+		} else pos++;
+	}
+
+	pos = 0;
+#define D_END() { pos++; printf(";"); }
+	printf("#qb 1 do not delete this line if you want to recompile it\n");
+	printf("#/ comment lines start with #/\n");
+	printf("#/ you can also you #include \"file\"\n");
+	printf("#/ and you can #add 0xIdIdIdId \"name\"\n");
+	while(pos < dstart) {
+		GetID();
+		
+		/*if(!strcmp(TextOf(*ip), "id")) {
+			printf("id");
+_id_arg_start:
+			if(qb[pos] == 0x16) D_END()
+			else if(qb[pos] == 0x07) {
+				pos++;
+				printf(" :=");
+				goto _id_arg_start;
+			} else {
+				printf(" .add =");
+				while(qb[pos] != 0x16) { // print out
+					if(qb[pos] < 0x10) printf(" 0%x", qb[pos]);
+					else printf(" %x", qb[pos]);
+					pos++;
+				}
+			}
+			if(qb[pos] == 0x16) D_END()
+			GetID();
+			printf(" %s", TextOf(*ip));
+		} else {*/
+			printf("%s", TextOf(*ip));
+		//}
+
+		if(qb[pos] != 0x16) {
+			if(qb[pos] == 0x07)			// Definition
+			{
+				pos++;
+				if(qb[pos] == 0x1b) {								// String: [length4] text 0
+					pos++;
+					GetID();
+					printf(" :s= \"%s\" (%i)", &qb[pos], *ip);
+					while(qb[pos]) pos++;	// skip text
+					pos++;					// skip null terminator
+				} else if(qb[pos] == 0x1a || qb[pos] == 0x17) {		// INT (1a = unsigned)
+					char t = (qb[pos] == 0x1a) ? 'u' : 'i';
+					pos++;
+					GetID();
+					printf(" :%c= %x (%i)", t, *ip, *ip);
+				} else { printf(" :="); newline = false;}
+			}
+			if(qb[pos] != 0x16)			// print data
+			{
+				printf(" .data =");
+				while(qb[pos] != 0x16) { // print out
+					if(qb[pos] == 0x01 && qb[pos+1] == 0x24 && qb[pos+2] == 0x01 && qb[pos+3] == 0x2b && pos+3 >= dstart) {
+						printf(" 01 24 01\n");
+						goto dataend;
+					}
+					if(qb[pos] < 0x10) printf(" 0%x", qb[pos]);
+					else printf(" %x", qb[pos]);
+					pos++;
+				}
+				//printf(" .e");
+				newline = true;
+			}
+		}
+
+		if(qb[pos] == 0x16) D_END()
+		else {
+			printf(".add =");
+			while(qb[pos] != 0x16) { // print out
+				if(qb[pos] < 0x10) printf(" 0%x", qb[pos]);
+				else printf(" %x", qb[pos]);
+				pos++;
+			}
+			//printf(" .e");
+		}
+
+		if(newline) printf("\n");
+		else printf(" ");
+		newline = true;
+	}
+dataend:
+
+	free(qb);
+    return 0;
+
+eerr:
+	if(qb) free(qb);
+	if(file) fclose(file);
+	return 1;
+}

@@ -1,0 +1,377 @@
+-- View this file in a monospaced font! --
+
+Marked with X are implemented in my decompiler
+compiler will be created soon
+C needs validity-checking
+
+OP | Description	| Syntax
+-----------------------------------------------------------------------------------------
+00 X End Script		: 0x00
+01 X New Instruction	: 0x01 [more opcodes in this instruction...]
+02 X Dunno? Label?	: 0x02 [4 bytes]
+03 X Struct		: Something := STRUCT{ Data1, Data2, Data3 }
+04 X End Struct		: 
+05 X Array		: Something := ARRAY{ Data1, Data2, Data3 }
+06 X End Array		: 
+07 X Equals		: Something := 356 / IF Something == SomethingElse...
+08 X member		: ((something)->)	(with the 0Es and 0Fs for the brackets is the only way i've seen it yet)
+09 C Maybe AND/OR/XOR	: Something := ARRAY{ Data1 0x09 Data2 0x09 Data3 }
+	Making ; out of this, array { data OR data } would make no sense... just a data seperator
+	which seems not to be needed tho...
+	but it's not the only thing which is in some files written another way...
+	maybe that one's only in elder files? versions? or newer???
+0A X - Minus		: Something := (Something - 1)
+0B X + Plus		: Something := (Something + 1)
+0C C Multiply or Divide?: Something := (Something 0x0C SomethingElse)
+0D C Multiply or Divide?: Something := (Something 0x0D SomethingElse)
+0E X ( Open Parenthesis	: IF (Something == SomethingElse)
+0F X ) Close Parenth.	: IF (Something == SomethingElse)
+10 : Dunno?
+11 : Dunno?
+12 X < Less Than	: IF (Something < SomethingElse)
+13 : Dunno?		: I guess <=
+14 X > More Than	: IF (Something > SomethingElse)
+15 : Dunno?		: I guess >= (they must be part of 10 to 15)
+16 X Name Hash, CRC-32	: 0x16 [4 byte hash]
+17 X Long Integer	: Something := 2147293829
+18 : Dunno? Some data type probably
+19 : ^ Same
+1A X Single Float	: Something := 283.0050
+1B X String		: Something := "Some text..."
+1C X Formatted Str?	: Something := "\nSome text..."
+1D : Dunno?
+1E X Vector (3Floats)	: Something := VECTOR{ 10.0, 15.5, 284.5 }
+1F X Pair (2Floats)	: Something := PAIR{ 10.0, 15.5 }
+20 X WHILE or FOR?	: A = B while [code] A++ UNTIL (C) ??? A = 0 FROM_THAT [code] A++ TO (C) ???
+21 X WEND or ENDFOR?	: wend or for(max_value?)
+22 : continue?
+23 X Function		: FUNCTION FunctionName() ... END FUNCTION
+24 X End Function	: ^
+25 : Dunno?
+26 : Dunno?
+27 : Dunno?
+28 X End If		: IF Something ... ENDIF
+29 X Dunno? Return?	: IF SomethingGoesWrong ... RETURN ENDIF
+2A : Dunno?
+2B X Debugging Key	: 0x2B [key hash CRC-32] [key name]
+2C X Dunno? Null?	: Something := NULL
+2D X Dunno? Global?	: Something := GLOBAL Something
+2E X Jump? Break?	: 
+2F X Select?		: Kinda complicated, see the bottom of this doc... <- once played around with them, couldn't make a working one in my files...
+30 : Dunno?
+31 : Dunno?
+32 X OR?		: IF ((Something) OR (SomethingElse)) ... ENDIF
+33 X AND
+34 : Dunno?
+35 : Dunno?
+36 : Dunno?
+37 : Dunno?
+38 : Dunno?
+39 X NOT		: IF NOT Something ... ENDIF
+3A : Dunno?
+3B : Dunno?
+3C X Switch		: SWITCH ... [cases] ... ENDSWITCH
+3D X End Switch		: ^
+3E X Case		: SWITCH Something CASE 1 DoStuff() ENDCASE ENDSWITCH
+3F X Default Case	: SWITCH ... [cases] ... DEFAULT DoStuff() ENDCASE ENDSWITCH
+40 : Select?		: Kinda complicated, see the bottom of the doc...... again???
+41 : Dunno?
+42 X Dot operator?	: Speed_Stat := Skater.Speed ?
+43 : Dunno?
+44 : Dunno?
+45 : Dunno?
+46 : Dunno?
+47 X IF			: IF Something DoStuff() ENDIF
+48 X ELSE		: IF Something ... ELSE DoStuff() ENDIF
+49 : END CASE / Break	: SWITCH Something CASE 1 DoStuff() ENDCASE ENDSWITCH
+
+
+--------------------------------------------------------------------------------------------
+
+
+"Selects" : I'm not exactly sure how these work but they're kind of complicated, here's one byte by byte in hex...
+2F : Select
+
+04 : --\
+00      \ Long for how many "cases" or whatever is in this...
+00      /
+00 : --/
+
+01 : There's one 2 byte value for each "case", usually 0100 or 0200
+00
+01
+00
+01
+00
+01
+00
+
+0C :--\
+00     \ This is the offset of where the code is for the first "case", there's one for each "case"
+00     /
+00 :--/
+
+...
+[Other case offsets]
+...
+
+01		<- This is the code of the first "case"
+16
+Something
+:=
+Something
+
+2E		<- Jump?
+23		<- This is the long to where the end of the "Select" is, where it jumps after executing "case" code
+00
+00
+00
+
+...
+[Other case code]
+...
+
+
+IDK how this would be written out in C/Basic code... maybe it's like Something = Something ? 1 : 0
+These are mostly in the [level]_scripts.qb files
+
+_______________________________________
+======================================= APPENDICES
+---------------------------------------
+
+_______________________________________
+======================================= Appendix A :: WHILE loop
+---------------------------------------
+
+:i $(GetArraySize) ( level_select_menu_level_info )
+:i %GLOBAL% $(index) = %i(0)
+:i WHILE
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) AND level ) = load_sk5ed_gameplay )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) AND level ) = load_TestLevel )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) AND level ) = load_Default )
+ :i if NOT StructureContains args
+structure = ((level_select_menu_level_info[global index]))
+	DEVKIT_ONLY	# Macro?
+	:i global level_num ((level_select_menu_level_info[gloabl index] ) AND level_num)
+	:i GetLevelGapTotals(level = global level_num)
+	:i if ( global num_gaps = 0 )
+		:i global gaps_text = "0 / ??"
+	:i else
+		:i FormatText args
+TextName = gaps_text "%i / %j"
+i = global num_collected_gaps
+j = global num_gaps
+	:i endif
+	:i if ( all_lvel_unlocked = 1 )
+		:i show_name = 1
+	:i else
+		:i show_name = 0
+		:i if StructureContains
+structure = (level_select_menu_level_info[global index])
+			seen_flag
+			:i if getGlobalFlag
+flag = ((level_select_menu_level_info[global index]) AND seen_flag)
+				:i show_name = 1
+			:i endif
+		:i endif
+	:i endif
+	
+
+IN THIS code part, each "AND" is a 08 byte
+okay here's my thoughts:
+There's no language, in which you can do something like (a and_also b) = c
+you have to do (a = c) and (b = c)
+and considering the names here... level would have to be the same anyway, but it's never SET in this file...
+despite of that, even if it WAS an AND, a BINARY AND... it would result in some fuzzy-logic
+for instance, let's say in the menu you select level 1, and level is 3 or 5, 1&3 == 1, just like 1&5 == 1, and 1&1 == 1
+so there would be unreasonable cases with equal results...
+So
+08 is 07 + 1, 07 = EQUAL
+in QB we write:
+A = B to set a = b
+and if A = B to compare
+but what if i want to SET a to b IN the if and THEn compare it to a third value?
+in THIS code piece it would be redundant data, but the only possible solution i can think of
+so it's
+if not (selected = level) == level_whatever (not the difference between '=' and '==' here
+anyway
+the selected menu-item would be overridden...
+stupid, eh?
+WRONG WE ARE
+here's how it continues
+
+	:i if ( global show_name = 1 )
+		:i FormatText
+TextName = level_text "%s GAPS:"
+s = ((level_select_menu_level_info[global index]) CopyTo text )
+
+
+Do yo see it?
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) 08 level ) = load_sk5ed_gameplay )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) 08 level ) = load_TestLevel )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] ) 08 level ) = load_Default )
+	:i global level_num ((level_select_menu_level_info[gloabl index] ) 08 level_num)
+s = ((level_select_menu_level_info[global index]) 08 text )
+
+
+What if i write it like....:
+ :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_sk5ed_gameplay )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_TestLevel )
+ :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_Default )
+	:i global level_num ((level_select_menu_level_info[gloabl index] )->level_num)
+s = ((level_select_menu_level_info[global index])->text )
+
+You know how we have things like:
+Skater.SetAmmoType() ?
+sure, you know how in C we have:
+	something a;
+	a.member...	// DOT
+and
+	something *a;
+	a->member...	// ARROW
+we will make THIS one be
+->
+
+
+
+
+:i $(GetArraySize) ( level_select_menu_level_info )
+:i %GLOBAL% $(index) = %i(0)
+:i WHILE
+ :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_sk5ed_gameplay )
+	 :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_TestLevel )
+		 :i if NOT ( ( ( level_select_menu_level_info[global index] )->level ) = load_Default )
+			 :i if NOT StructureContains args
+structure = ((level_select_menu_level_info[global index]))
+			DEVKIT_ONLY	# Macro?
+				:i global level_num ((level_select_menu_level_info[gloabl index] )->level_num)
+				:i GetLevelGapTotals(level = global level_num)
+				:i if ( global num_gaps = 0 )
+					:i global gaps_text = "0 / ??"
+				:i else
+					:i FormatText args
+TextName = gaps_text "%i / %j"
+i = global num_collected_gaps
+j = global num_gaps
+				:i endif
+				:i if ( all_lvel_unlocked = 1 )
+					:i show_name = 1
+				:i else
+					:i show_name = 0
+					:i if StructureContains
+structure = (level_select_menu_level_info[global index])
+						seen_flag
+						:i if getGlobalFlag
+flag = ((level_select_menu_level_info[global index]) AND seen_flag)
+							:i show_name = 1
+						:i endif
+					:i endif
+				:i endif
+				:i if ( global show_name = 1 )
+					:i FormatText
+TextName = level_text "%s GAPS:"
+s = ((level_select_menu_level_info[global index])->text )
+				:i else
+					:i FormatText
+TextName = level_text "%s GAPS:"
+s = "??????"
+				:i endif
+				:i progress_menu_add_item
+id1 = progress_vmenu
+left_col_text = global level_text
+right_col_text = global gaps_text
+			 :i endif
+		 :i endif
+	 :i endif
+ :i endif
+:i global index = (global index + long(1) ) 
+:i WEND ( global array_size )
+
+
+
+_______________________________________
+======================================= Appendix B :: Switches
+---------------------------------------
+
+Switches:                                              +-------------------+
+QBE data:                                              |                   |
+.data = 01 3c;		   +-------| this is the offset|to the next case   +->TO THIS BYTE
+camera_angle .data = 01 3e 49 27 00 17 00 00 00 00 01; |
+camera_text :s= "CAMERA ANGLE: 1" .data = 01 49 7b 00 3e 49 27 00 17 01 00 00 00 01;
+camera_text :s= "CAMERA ANGLE: 2" .data = 01 49 52 00 3e 49 27 00 17 02 00 00 00 01;
+camera_text :s= "CAMERA ANGLE: 3" .data = 01 49 29 00 3e 49 24 00 17 03 00 00 00 01;
+camera_text :s= "CAMERA ANGLE: 4" .data = 01 3d 01;
+
+
+:i switch $camera_angle$
+	:i case long(0)
+		:i $camera_text$ = %s("CAMERA ANGLE: 1")
+	:i case long(1)
+		:i $camera_text$ = %s("CAMERA ANGLE: 2")
+	:i case long(2)
+		:i $camera_text$ = %s("CAMERA ANGLE: 3")
+	:i case long(3)
+		:i $camera_text$ = %s("CAMERA ANGLE: 4")
+:i endswitch
+
+Compiling becomes complicated here... we have to add 49 [offset_to_case2] <data> for each case byte, and 49 offset_to_end before each case-code...
+we have to push QB_SWITCH_INFO structures :D
+eaaaaazy
+
+_______________________________________
+======================================= Appendix C :: Selects
+---------------------------------------
+
+QBE Data:
+.data = 01 2f 0a 00 00 00 01 00 01 00 01 00 01 00 01 00 01 00 01 00 01 00 01 00 01 00 24 00 00 00 42 00 00 00 60 00 00 00 7e 00 00 00 9c 00 00 00 ba 00 00 00 d8 00 00 00 f6 00 00 00 14 01 00 00 32 01 00 00;
+runtwoscripts;
+script_text :=; bail1;
+script_score :=; bail1 .data = 2c 01 2e 2d 01 00 00;
+runtwoscripts;
+script_text :=; bail1;
+script_score :=; bail1 .data = 2c 01 2e 0b 01 00 00;
+runtwoscripts;
+script_text :=; bail2;
+script_score :=; bail3 .data = 2c 01 2e e9 00 00 00;
+runtwoscripts;
+script_text :=; bail4;
+script_score :=; bail5 .data = 2c 01 2e c7 00 00 00;
+runtwoscripts;
+script_text :=; bail5;
+script_score :=; bail4 .data = 2c 01 2e a5 00 00 00;
+runtwoscripts;
+script_text :=; bail1;
+script_score :=; bail6 .data = 2c 01 2e 83 00 00 00;
+runtwoscripts;
+script_text :=; bail6;
+script_score :=; bail6 .data = 2c 01 2e 61 00 00 00;
+runtwoscripts;
+script_text :=; bail4;
+script_score :=; bail4 .data = 2c 01 2e 3f 00 00 00;
+runtwoscripts;
+script_text :=; bail5;
+script_score :=; bail5 .data = 2c 01 2e 1d 00 00 00;
+runtwoscripts;
+script_text :=; bail2;
+script_score :=; bail1 .data = 2c 01 01 24
+
+	  +number of cases
+	  |
+:i select(10) [01 00 : A times, A offsets to a non :i starting instruction]
+	call $runtwoscripts$ arguments
+		$script_text$ = $bail1$
+		$script_score$ = $bail1$
+		isNull
+	:i break	[4 byte offset, why 4 byte offset??? IFs have 2 byte offsets...]
+	call $runtwoscripts$ arguments
+		$script_text$ = $bail2$
+		$script_scores$ = $bail2$
+		isNull
+	:i break
+(...)
+	call $runtwoscripts$ arguments
+		$script_text$ = $bail3$
+		$script_scores$ = $bail3$
+		isNull
+	:i
+:i

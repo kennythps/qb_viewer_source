@@ -1,0 +1,38 @@
+<html>
+<body>
+<pre>
+<h1>Build Log</h1>
+<h3>
+--------------------Configuration: qb_view - Win32 Release--------------------
+</h3>
+<h3>Command Lines</h3>
+Creating temporary file "C:\DOCUME~1\kmr\USTAWI~1\Temp\RSP2A.tmp" with contents
+[
+/nologo /ML /W3 /GX /O2 /D "WIN32" /D "NDEBUG" /D "_CONSOLE" /D "_MBCS" /Fp"Release/qb_view.pch" /YX /Fo"Release/" /Fd"Release/" /FD /c 
+"C:\Documents and Settings\kmr\Pulpit\qb_view2\compile.cpp"
+"C:\Documents and Settings\kmr\Pulpit\qb_view2\decompile.cpp"
+]
+Creating command line "cl.exe @C:\DOCUME~1\kmr\USTAWI~1\Temp\RSP2A.tmp" 
+Creating temporary file "C:\DOCUME~1\kmr\USTAWI~1\Temp\RSP2D.tmp" with contents
+[
+kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /nologo /subsystem:console /incremental:no /pdb:"Release/qb_view.pdb" /machine:I386 /out:"Release/qb_view.exe" 
+".\Release\compile.obj"
+".\Release\decompile.obj"
+".\Release\editprd.obj"
+".\Release\main.obj"
+".\Release\table.obj"
+]
+Creating command line "link.exe @C:\DOCUME~1\kmr\USTAWI~1\Temp\RSP2D.tmp"
+<h3>Output Window</h3>
+Compiling...
+compile.cpp
+decompile.cpp
+Linking...
+
+
+
+<h3>Results</h3>
+qb_view.exe - 0 error(s), 0 warning(s)
+</pre>
+</body>
+</html>

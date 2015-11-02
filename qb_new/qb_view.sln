@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 9.00
+# Visual C++ Express 2005
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "qb_view", "qb_view.vcproj", "{15224761-6C87-428B-8EC6-442C23759D2A}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{15224761-6C87-428B-8EC6-442C23759D2A}.Debug|Win32.ActiveCfg = Debug|Win32
+		{15224761-6C87-428B-8EC6-442C23759D2A}.Debug|Win32.Build.0 = Debug|Win32
+		{15224761-6C87-428B-8EC6-442C23759D2A}.Release|Win32.ActiveCfg = Release|Win32
+		{15224761-6C87-428B-8EC6-442C23759D2A}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal
